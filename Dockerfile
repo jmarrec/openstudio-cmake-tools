@@ -23,7 +23,7 @@ RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommen
     libdbus-glib-1-dev libglib2.0-dev libfontconfig1-dev libxi-dev libxrender-dev \
     libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
     libreadline-dev libyaml-dev libharfbuzz-dev libgmp-dev patchelf python3 python3-pip python3-dev \
-    lcov wget ninja-build gpg-agent software-properties-common \
+    lcov wget ninja-build gpg-agent software-properties-common ca-certificates \
     jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep \
     groff less \
     && ARCH=$(uname -m) && \
