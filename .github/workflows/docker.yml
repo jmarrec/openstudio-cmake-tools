@@ -180,7 +180,9 @@ jobs:
           type=semver,pattern={{major}}.{{minor}},prefix=${{ matrix.other_name }}-
           type=semver,pattern={{major}},prefix=${{ matrix.other_name }}-
           type=raw,value=main,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.VARIANT }}-
-          type=raw,value=latest,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.VARIANT }}-
+          type=raw,value=latest,enable=${{ contains(github.ref, 'refs/tags') }},prefix=${{ matrix.VARIANT }}-
+          type=raw,value=main,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.other_name }}-
+          type=raw,value=latest,enable=${{ contains(github.ref, 'refs/tags') }},prefix=${{ matrix.other_name }}-
 
     - name: Get execution timestamp with RFC3339 format
       # This step gets the current execution timestamp in RFC3339 format.
