@@ -123,7 +123,12 @@ RUN echo "Installing Ruby ${RUBY_VERSION} via RVM" \
     && curl -sSL https://get.rvm.io | bash -s stable \
     && usermod -a -G rvm root \
     && if [ "${VARIANT}" = "focal" ]; then export RUBY_CFLAGS="-DOPENSSL_API_COMPAT=0x30000000L"; fi \
-    && /usr/local/rvm/bin/rvm install ${RUBY_VERSION} --with-openssl-dir=/usr/local/ssl/ -- --enable-static \
+    && echo "RUBY_CFLAGS=${RUBY_CFLAGS}" \
+    && /usr/local/rvm/bin/rvm install ${RUBY_VERSION} --with-openssl-dir=/usr/local/ssl/ -- --enable-static || { \
+          echo "Ruby installation failed. Dumping make.log..."; \
+          find /usr/local/rvm/log -name make.log -exec echo "--- {} ---" \; -exec cat {} \;; \
+          exit 1; \
+    } \
     && /usr/local/rvm/bin/rvm --default use ${RUBY_VERSION}
 
 ENV PATH="/usr/local/rvm/rubies/ruby-${RUBY_VERSION}/bin:${PATH}"
