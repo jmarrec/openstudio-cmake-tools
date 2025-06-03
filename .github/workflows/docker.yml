@@ -95,7 +95,7 @@ jobs:
           VARIANT=${{ matrix.VARIANT }}
           GCC_VER=${{ matrix.GCC_VER }}
         labels: ${{ steps.meta.outputs.labels }}
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: ${{ env.REGISTRY_IMAGE }}
         annotations: ${{ steps.meta.outputs.annotations }}
         outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true,oci-mediatypes=true
         cache-from: type=gha,scope=${{ github.repository }}-${{ github.ref_name }}-${{ matrix.name }}
