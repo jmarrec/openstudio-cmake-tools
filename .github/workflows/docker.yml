@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || matrix.arch == 'arm64' && 'ubuntu-24.04-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -24,37 +24,31 @@ jobs:
           arch: amd64
           VARIANT: focal
           other_name: ubuntu-20.04
-          os: ubuntu-latest
           # GCC_VER: "9"
         - name: focal-arm64
           arch: arm64
           VARIANT: focal
           other_name: ubuntu-20.04
-          os: ubuntu-24.04-arm
           # GCC_VER: "9"
         - name: jammy-amd64
           arch: amd64
           VARIANT: jammy
           other_name: ubuntu-22.04
-          os: ubuntu-latest
           # GCC_VER: "11"
         - name: jammy-arm64
           arch: arm64
           VARIANT: jammy
           other_name: ubuntu-22.04
-          os: ubuntu-24.04-arm
           # GCC_VER: "11"
         - name: noble-amd64
           arch: amd64
           VARIANT: noble
           other_name: ubuntu-24.04
-          os: ubuntu-latest
           # GCC_VER: "11"
         - name: noble-arm64
           arch: arm64
           VARIANT: noble
           other_name: ubuntu-24.04
-          os: ubuntu-24.04-arm
           # GCC_VER: "11"
 
     steps:
