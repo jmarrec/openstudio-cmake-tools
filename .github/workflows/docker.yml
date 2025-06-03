@@ -1,0 +1,101 @@
+name: Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [focal-amd64, focal-arm64, jammy-amd64, jammy-arm64, noble-amd64, noble-arm64]
+        include:
+        - name: focal-amd64
+          arch: amd64
+          VARIANT: focal
+          other_name: ubuntu-20.04
+          # GCC_VER: "9"
+        - name: focal-arm64
+          arch: arm64
+          VARIANT: focal
+          other_name: ubuntu-20.04
+          # GCC_VER: "9"
+        - name: jammy-amd64
+          arch: amd64
+          VARIANT: jammy
+          other_name: ubuntu-22.04
+          # GCC_VER: "11"
+        - name: jammy-arm64
+          arch: arm64
+          VARIANT: jammy
+          other_name: ubuntu-22.04
+          # GCC_VER: "11"
+        - name: noble-amd64
+          arch: amd64
+          VARIANT: noble
+          other_name: ubuntu-24.04
+          # GCC_VER: "11"
+        - name: noble-arm64
+          arch: arm64
+          VARIANT: noble
+          other_name: ubuntu-24.04
+          # GCC_VER: "11"
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: set lower case owner name
+      run: |
+        echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+      env:
+        OWNER: '${{ github.repository_owner }}'
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.OWNER_LC }}/openstudio-cmake-tools
+        tags: |
+          ${{ matrix.VARIANT }}
+          ${{ matrix.other_name }}
+
+    - name: Debug
+      run: |
+        ls -la
+        find . -name Dockerfile
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          VARIANT=${{ matrix.VARIANT }}
+          GCC_VER=${{ matrix.GCC_VER }}
+        platforms: linux/${{ matrix.arch }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
