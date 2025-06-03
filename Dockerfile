@@ -80,9 +80,9 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 
 # Install python from pyenv
 ARG PYTHON_VERSION=3.12.2
-ENV PYENV_ROOT=/opt/pyenv \
-    PATH=/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
-    Python_ROOT_DIR=/opt/pyenv/versions/${PYTHON_VERSION} \
+ENV PYENV_ROOT=${HOME}/.pyenv \
+    PATH=${HOME}/.pyenv/shims:${HOME}/.pyenv/bin:${PATH} \
+    Python_ROOT_DIR=${HOME}/.pyenv/versions/${PYTHON_VERSION} \
     PYTHON_VERSION=${PYTHON_VERSION}
 
 # Install python from pyenv
