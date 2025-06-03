@@ -117,29 +117,28 @@ RUN cd /tmp && echo "Start by installing ${OPENSSL_VERSION}" \
     && ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl '-Wl,-rpath,$(LIBRPATH)' \
     && make --quiet -j $(nproc) && make install --quiet
 
-RUN echo "Installing Ruby ${RUBY_VERSION} via RVM" \
-    && curl -sSL https://rvm.io/mpapis.asc | gpg --import - \
-    && curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - \
-    && curl -sSL https://get.rvm.io | bash -s stable \
-    && usermod -a -G rvm root \
-    && export PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig \
-    && /usr/local/rvm/bin/rvm install ${RUBY_VERSION} --with-openssl-dir=/usr/local/ssl/ -- --enable-static || { \
-          echo "Ruby installation failed. Dumping make.log..."; \
-          find /usr/local/rvm/log -name make.log -exec echo "--- {} ---" \; -exec cat {} \;; \
-          exit 1; \
-    } \
-    && /usr/local/rvm/bin/rvm --default use ${RUBY_VERSION}
+ENV RBENV_ROOT=${HOME}/.rbenv \
+    PATH=${HOME}/.rbenv/shims:${HOME}/.rbenv/bin:${PATH}
 
-ENV PATH="/usr/local/rvm/rubies/ruby-${RUBY_VERSION}/bin:${PATH}"
+# Install ruby via rbenv
+# https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint (removing libssl-dev)
+RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-dev libreadline6-dev zlib1g-dev \
+        libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev \
+    && curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash \
+    && export PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig \
+    && RUBY_CONFIGURE_OPTS="--disable-shared" rbenv install -v ${RUBY_VERSION} \
+    && rbenv global ${RUBY_VERSION} \
+    && ruby -e "require 'openssl'; raise unless OpenSSL::VERSION == '${OPENSSL_VERSION}'" \
+    && gem install bundler -v "${BUNDLER_VERSION}"
 
 # RUN cd /tmp \
 #     && echo "Fixing CA certificate issue" \
 #     && rubygems=$(gem which rubygems) && global_ca=$(find $(dirname $rubygems) -name "GlobalSignRootC*.pem") \
 #     && wget https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/rubygems.org/GlobalSignRootCA_R3.pem \
     # && cp GlobalSignRootCA_R3.pem $global_ca \
-RUN wget https://rubygems.org/gems/rubygems-update-${RUBY_VERSION}.gem \
-    && gem install --local rubygems-update-${RUBY_VERSION}.gem \
-    && gem install bundler -v "${BUNDLER_VERSION}"
+#RUN wget https://rubygems.org/gems/rubygems-update-${RUBY_VERSION}.gem \
+#    && gem install --local rubygems-update-${RUBY_VERSION}.gem \
+#    && gem install bundler -v "${BUNDLER_VERSION}"
 
 # Install ccache (we must build for arm64)
 ARG CCACHE_VERSION=4.11.3
