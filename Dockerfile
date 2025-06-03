@@ -122,6 +122,7 @@ RUN echo "Installing Ruby ${RUBY_VERSION} via RVM" \
     && curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - \
     && curl -sSL https://get.rvm.io | bash -s stable \
     && usermod -a -G rvm root \
+    && if [ "${VARIANT}" == "focal" ]; then export RUBY_CFLAGS="-DOPENSSL_API_COMPAT=0x30000000L"; fi \
     && /usr/local/rvm/bin/rvm install ${RUBY_VERSION} --with-openssl-dir=/usr/local/ssl/ -- --enable-static \
     && /usr/local/rvm/bin/rvm --default use ${RUBY_VERSION}
 
