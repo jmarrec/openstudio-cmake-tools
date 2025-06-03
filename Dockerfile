@@ -161,6 +161,28 @@ RUN if [ -n "${DOXYGEN_VERSION_UNDERSCORED}" ]; then \
       && ninja && ninja install \
     ; fi
 
+# Install QtIFW to the default directory, but explicitly
+ARG QTIFW_VERSION=4.8.1
+ARG QTIFW_INSTALL_DIR=${HOME}/Qt/QtIFW-${QTIFW_VERSION}
+ENV PATH=${QTIFW_INSTALL_DIR}/bin:${PATH}
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        QTIFW_ARCH="x64"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        QTIFW_ARCH="arm64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi \
+    && QTIFW_URL="https://download.qt.io/official_releases/qt-installer-framework/${QTIFW_VERSION}/QtInstallerFramework-linux-${QTIFW_ARCH}-${QTIFW_VERSION}.run" \
+    && curl -fsSL -o qtifw.run "${QTIFW_URL}" \
+    && chmod +x qtifw.run \
+    && apt-get -y install libxkbcommon-x11-0 xorg-dev libgl1-mesa-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-render-util0-dev libxcb-xinerama0-dev libxcb-randr0-dev libxcb-shape0 libxcb-cursor0 libdbus-1-3 libwebp-dev \
+    && ./qtifw.run \
+        --accept-licenses \
+        --confirm-command \
+        --default-answer --root ${HOME}/Qt/QtIFW-${VERSION} install \
+    && rm -rf qtifw.run
+
 ## Cleanup cached apt data we don't need anymore
 RUN apt-get -qq autoremove -y \
     && apt-get -qq autoclean \
