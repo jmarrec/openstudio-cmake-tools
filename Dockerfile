@@ -23,7 +23,7 @@ RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommen
     libdbus-glib-1-dev libglib2.0-dev libfontconfig1-dev libxi-dev libxrender-dev \
     libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
     libreadline-dev libyaml-dev libharfbuzz-dev libgmp-dev patchelf python3 python3-pip python3-dev \
-    lcov wget ninja-build gpg-agent software-properties-common ca-certificates \
+    lcov wget ninja-build gpg-agent software-properties-common ca-certificates pkgconf \
     jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep \
     groff less \
     && ARCH=$(uname -m) && \
@@ -122,8 +122,7 @@ RUN echo "Installing Ruby ${RUBY_VERSION} via RVM" \
     && curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - \
     && curl -sSL https://get.rvm.io | bash -s stable \
     && usermod -a -G rvm root \
-    && if [ "${VARIANT}" = "focal" ]; then export RUBY_CFLAGS="-DOPENSSL_API_COMPAT=0x30000000L"; fi \
-    && echo "RUBY_CFLAGS=${RUBY_CFLAGS}" \
+    && export PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig \
     && /usr/local/rvm/bin/rvm install ${RUBY_VERSION} --with-openssl-dir=/usr/local/ssl/ -- --enable-static || { \
           echo "Ruby installation failed. Dumping make.log..."; \
           find /usr/local/rvm/log -name make.log -exec echo "--- {} ---" \; -exec cat {} \;; \
