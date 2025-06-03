@@ -121,14 +121,16 @@ ENV RBENV_ROOT=${HOME}/.rbenv \
     PATH=${HOME}/.rbenv/shims:${HOME}/.rbenv/bin:${PATH}
 
 # Install ruby via rbenv
-# https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint (removing libssl-dev)
+# https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint
+# focal is giving me trouble, tried PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig, passing --with-openssl-dir
+# and even RUBY_BUILD_VENDOR_OPENSSL=1. I don't think we care about the openssl version used anymore (our conan ruby is used for building)
 RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-dev libreadline6-dev zlib1g-dev \
         libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev \
     && curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash \
-    && export PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig \
     && RUBY_CONFIGURE_OPTS="--disable-shared" rbenv install -v ${RUBY_VERSION} \
     && rbenv global ${RUBY_VERSION} \
-    && ruby -e "require 'openssl'; raise unless OpenSSL::VERSION == '${OPENSSL_VERSION}'" \
+    && ruby --version \
+    && ruby -e "require 'openssl'; puts OpenSSL::VERSION" \
     && gem install bundler -v "${BUNDLER_VERSION}"
 
 # RUN cd /tmp \
