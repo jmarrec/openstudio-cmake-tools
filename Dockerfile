@@ -17,8 +17,8 @@ WORKDIR ${HOME}
 ENV TZ=US
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update -qq --fix-missing
-RUN apt-get install -y --no-install-recommends --no-install-suggests curl vim lsb-release build-essential git libssl-dev libxt-dev \
+RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommends --no-install-suggests \
+    curl vim lsb-release build-essential git libssl-dev libxt-dev \
     libncurses5-dev libgl1-mesa-dev autoconf libexpat1-dev libpng-dev libfreetype6-dev \
     libdbus-glib-1-dev libglib2.0-dev libfontconfig1-dev libxi-dev libxrender-dev \
     libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
@@ -26,18 +26,18 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests curl vim ls
     lcov wget ninja-build gpg-agent software-properties-common \
     jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep \
     groff less \
-    && ARCH=$(uname -m) \
+    && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
         CLI_ZIP="awscli-exe-linux-x86_64.zip"; \
     elif [ "$ARCH" = "aarch64" ]; then \
         CLI_ZIP="awscli-exe-linux-aarch64.zip"; \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi && \
-    curl "https://awscli.amazonaws.com/${CLI_ZIP}" -o "awscliv2.zip" && \
-    unzip awscliv2.zip && \
-    ./aws/install && \
-    rm -rf awscliv2.zip aws
+    fi \
+    && curl "https://awscli.amazonaws.com/${CLI_ZIP}" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
 
 # Set the locale
 RUN apt-get -y --no-install-recommends --no-install-suggests install locales \
