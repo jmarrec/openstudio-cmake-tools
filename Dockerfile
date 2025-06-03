@@ -101,9 +101,11 @@ RUN python --version \
     && conan profile detect \
     && sed -i 's/cppstd=.*$/cppstd=20/g' $HOME/.conan2/profiles/default \
     && echo "core:non_interactive = True" >> $HOME/.conan2/global.conf \
-    && echo "core.download:parallel={{os.cpu_count() - 2}}" >> $HOME/.conan2/global.conf \
-    && echo "core.sources:download_cache={{os.path.expanduser("~/.conan-download-cache")}}" >> $HOME/.conan2/global.conf \
-    && conan remote add --force nrel-v2 https://conan.openstudio.net/artifactory/api/conan/conan-v2
+    && echo "core.download:parallel = {{os.cpu_count() - 2}}" >> $HOME/.conan2/global.conf \
+    && echo "core.sources:download_cache = $HOME/.conan2/.conan-download-cache" >> $HOME/.conan2/global.conf \
+    && conan remote add --force nrel-v2 https://conan.openstudio.net/artifactory/api/conan/conan-v2 \
+    && echo "Displaying default profile" && cat $HOME/.conan2/profiles/default \
+    && echo "Displaying global.conf" && cat $HOME/.conan2/global.conf
 
 # Install Ruby from RVM
 ARG RUBY_VERSION=3.2.2
