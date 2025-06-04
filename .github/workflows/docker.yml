@@ -173,12 +173,12 @@ jobs:
         tags: |
           ${{ matrix.VARIANT }}
           ${{ matrix.other_name }}
-          type=semver,pattern={{version}},prefix=${{ matrix.VARIANT }}-
-          type=semver,pattern={{major}}.{{minor}},prefix=${{ matrix.VARIANT }}-
-          type=semver,pattern={{major}},prefix=${{ matrix.VARIANT }}-
-          type=semver,pattern={{version}},prefix=${{ matrix.other_name }}-
-          type=semver,pattern={{major}}.{{minor}},prefix=${{ matrix.other_name }}-
-          type=semver,pattern={{major}},prefix=${{ matrix.other_name }}-
+          type=semver,pattern=v{{version}},prefix=${{ matrix.VARIANT }}-
+          type=semver,pattern=v{{major}}.{{minor}},prefix=${{ matrix.VARIANT }}-
+          type=semver,pattern=v{{major}},prefix=${{ matrix.VARIANT }}-
+          type=semver,pattern=v{{version}},prefix=${{ matrix.other_name }}-
+          type=semver,pattern=v{{major}}.{{minor}},prefix=${{ matrix.other_name }}-
+          type=semver,pattern=v{{major}},prefix=${{ matrix.other_name }}-
           type=raw,value=main,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.VARIANT }}-
           type=raw,value=latest,enable=${{ contains(github.ref, 'refs/tags') }},prefix=${{ matrix.VARIANT }}-
           type=raw,value=main,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.other_name }}-
