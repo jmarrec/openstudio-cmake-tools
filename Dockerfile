@@ -80,9 +80,10 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 
 # Install python from pyenv
 ARG PYTHON_VERSION=3.12.2
-ENV PYENV_ROOT=${HOME}/.pyenv \
-    PATH=${HOME}/.pyenv/shims:${HOME}/.pyenv/bin:${PATH} \
-    Python_ROOT_DIR=${HOME}/.pyenv/versions/${PYTHON_VERSION} \
+# NOTE: We're placing pyenv and rbenv at /opt/ instead of $HOME/.pyenv, because the entire HOME directory is bind-mounted on CI, so it would be obscured by the mount
+ENV PYENV_ROOT=/opt/pyenv \
+    PATH=/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
+    Python_ROOT_DIR=/opt/pyenv/versions/${PYTHON_VERSION} \
     PYTHON_VERSION=${PYTHON_VERSION}
 
 # Install python from pyenv
@@ -117,16 +118,19 @@ RUN cd /tmp && echo "Start by installing ${OPENSSL_VERSION}" \
     && ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl '-Wl,-rpath,$(LIBRPATH)' \
     && make --quiet -j $(nproc) && make install --quiet
 
-ENV RBENV_ROOT=${HOME}/.rbenv \
-    PATH=${HOME}/.rbenv/shims:${HOME}/.rbenv/bin:${PATH}
+ENV RBENV_ROOT=/opt/rbenv \
+    PATH=/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
 
 # Install ruby via rbenv
 # https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint
 # focal is giving me trouble, tried PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig, passing --with-openssl-dir
 # and even RUBY_BUILD_VENDOR_OPENSSL=1. I don't think we care about the openssl version used anymore (our conan ruby is used for building)
+# rbenv-installer does not allow specifying the PATH where it's going to be installed
 RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-dev libreadline6-dev zlib1g-dev \
         libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev \
-    && curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash \
+    && git clone https://github.com/rbenv/rbenv.git ${RBENV_ROOT} \
+    && git clone https://github.com/rbenv/ruby-build.git $RBENV_ROOT/plugins/ruby-build \
+    && rbenv init bash \
     && RUBY_CONFIGURE_OPTS="--disable-shared" rbenv install -v ${RUBY_VERSION} \
     && rbenv global ${RUBY_VERSION} \
     && ruby --version \
