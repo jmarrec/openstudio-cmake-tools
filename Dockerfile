@@ -189,8 +189,8 @@ RUN apt-get -qq autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/*
 
-# create default user ubuntu
-RUN if [ "${VARIANT}" != "noble" ]; then useradd -u 1000 ubuntu; fi;
+# create default user ubuntu (added by default already starting at noble), Jenkins uses it
+RUN if [ "${VARIANT}" = "focal" ] || [ "${VARIANT}" = "jammy" ]; then useradd -u 1000 ubuntu; fi
 
 COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
