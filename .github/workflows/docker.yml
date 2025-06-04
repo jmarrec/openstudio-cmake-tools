@@ -171,8 +171,6 @@ jobs:
       with:
         images: ${{ env.REGISTRY_IMAGE }}
         tags: |
-          ${{ matrix.VARIANT }}
-          ${{ matrix.other_name }}
           type=semver,pattern=v{{version}},prefix=${{ matrix.VARIANT }}-
           type=semver,pattern=v{{major}}.{{minor}},prefix=${{ matrix.VARIANT }}-
           type=semver,pattern=v{{major}},prefix=${{ matrix.VARIANT }}-
@@ -183,6 +181,7 @@ jobs:
           type=raw,value=latest,enable=${{ contains(github.ref, 'refs/tags') }},prefix=${{ matrix.VARIANT }}-
           type=raw,value=main,enable=${{ github.ref_name == 'main' }},prefix=${{ matrix.other_name }}-
           type=raw,value=latest,enable=${{ contains(github.ref, 'refs/tags') }},prefix=${{ matrix.other_name }}-
+          type=ref,event=pr,prefix=${{ matrix.VARIANT }}-
 
     - name: Get execution timestamp with RFC3339 format
       # This step gets the current execution timestamp in RFC3339 format.
