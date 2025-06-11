@@ -82,7 +82,7 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 ARG PYTHON_VERSION=3.12.2
 # NOTE: We're placing pyenv and rbenv at /opt/ instead of $HOME/.pyenv, because the entire HOME directory is bind-mounted on CI, so it would be obscured by the mount
 ENV PYENV_ROOT=/opt/pyenv \
-    PATH=/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
+    PATH=/opt/pyenv/versions/${PYTHON_VERSION}/bin:/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
     Python_ROOT_DIR=/opt/pyenv/versions/${PYTHON_VERSION} \
     PYTHON_VERSION=${PYTHON_VERSION}
 
@@ -119,7 +119,7 @@ RUN cd /tmp && echo "Start by installing ${OPENSSL_VERSION}" \
     && make --quiet -j $(nproc) && make install --quiet
 
 ENV RBENV_ROOT=/opt/rbenv \
-    PATH=/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
+    PATH=/opt/rbenv/versions/${RUBY_VERSION}/bin:/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
 
 # Install ruby via rbenv
 # https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint
