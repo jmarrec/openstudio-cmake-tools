@@ -1,3 +1,5 @@
+report_tool_infos.py
+
 # Build directories and binary files
 build/
 out/
