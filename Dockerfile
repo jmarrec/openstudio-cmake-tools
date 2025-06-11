@@ -24,7 +24,7 @@ RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommen
     libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
     libreadline-dev libyaml-dev libharfbuzz-dev libgmp-dev patchelf python3 python3-pip python3-dev \
     lcov wget ninja-build gpg-agent software-properties-common ca-certificates pkgconf \
-    jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep \
+    jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep tmate \
     groff less \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
