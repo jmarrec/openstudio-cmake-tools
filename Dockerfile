@@ -135,7 +135,10 @@ RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-d
     && rbenv global ${RUBY_VERSION} \
     && ruby --version \
     && ruby -e "require 'openssl'; puts OpenSSL::VERSION" \
-    && gem install bundler -v "${BUNDLER_VERSION}"
+    && gem install bundler -v "${BUNDLER_VERSION}" \
+    && echo "Shenanigans to fix the bundle tests" \
+    && mkdir -p /opt/rbenv/versions/3.2.2/lib/ruby/gems/3.2.0/gems/bundler-2.4.10/libexec \
+    && ln -sf ../exe/bundle /opt/rbenv/versions/3.2.2/lib/ruby/gems/3.2.0/gems/bundler-2.4.10/libexec/bundle
 
 # RUN cd /tmp \
 #     && echo "Fixing CA certificate issue" \
