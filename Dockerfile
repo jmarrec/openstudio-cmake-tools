@@ -97,7 +97,7 @@ RUN apt-get install -y build-essential libssl-dev zlib1g-dev \
 
 # Install conan (and configure) and some packages
 RUN python --version \
-    && pip install "conan==2.17.0" gcovr numpy pytest pytest-xdist twine requests packaging \
+    && pip install "conan==2.17.0" gcovr "pandas==2.2.3" "numpy==2.0.2" "pytest==8.3.3" pytest-xdist twine requests packaging "tabulate==0.9.0" \
     && conan --version \
     && conan profile detect \
     && sed -i 's/cppstd=.*$/cppstd=20/g' $HOME/.conan2/profiles/default \
@@ -198,5 +198,6 @@ RUN if [ "${VARIANT}" = "focal" ] || [ "${VARIANT}" = "jammy" ]; then useradd -u
 
 COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
+COPY report_tool_infos.py /usr/local/bin/report_tool_infos
 
 CMD ["/bin/bash"]
