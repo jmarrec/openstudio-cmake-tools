@@ -1,4 +1,4 @@
-report_tool_infos.py
+report_all_containers_tool_infos.py
 
 # Build directories and binary files
 build/

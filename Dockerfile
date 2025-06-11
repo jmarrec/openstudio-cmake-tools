@@ -198,6 +198,6 @@ RUN if [ "${VARIANT}" = "focal" ] || [ "${VARIANT}" = "jammy" ]; then useradd -u
 
 COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
-COPY inside_docker_report_tool_infos.py /opt/
+COPY report_tool_infos.py /usr/local/bin/report_tool_infos
 
 CMD ["/bin/bash"]
