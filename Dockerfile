@@ -203,4 +203,8 @@ COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
 COPY report_tool_infos.py /usr/local/bin/report_tool_infos
 
+# Make another copy at /opt/config
+COPY .inputrc .bashrc /opt/config/
+COPY git-prompt.sh /opt/config/
+
 CMD ["/bin/bash"]
