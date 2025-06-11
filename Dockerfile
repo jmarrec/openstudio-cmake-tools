@@ -167,7 +167,7 @@ RUN if [ -n "${DOXYGEN_VERSION_UNDERSCORED}" ]; then \
 
 # Install QtIFW to the default directory, but explicitly
 ARG QTIFW_VERSION=4.8.1
-ARG QTIFW_INSTALL_DIR=${HOME}/Qt/QtIFW-${QTIFW_VERSION}
+ARG QTIFW_INSTALL_DIR=/opt/Qt/QtIFW-${QTIFW_VERSION}
 ENV PATH=${QTIFW_INSTALL_DIR}/bin:${PATH}
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
@@ -184,7 +184,7 @@ RUN ARCH=$(uname -m) && \
     && ./qtifw.run \
         --accept-licenses \
         --confirm-command \
-        --default-answer --root ${HOME}/Qt/QtIFW-${VERSION} install \
+        --default-answer --root ${QTIFW_INSTALL_DIR} install \
     && rm -rf qtifw.run
 
 ## Cleanup cached apt data we don't need anymore
