@@ -24,7 +24,7 @@ RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommen
     libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
     libreadline-dev libyaml-dev libharfbuzz-dev libgmp-dev patchelf python3 python3-pip python3-dev \
     lcov wget ninja-build gpg-agent software-properties-common ca-certificates pkgconf \
-    jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep \
+    jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep tmate \
     groff less \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
@@ -82,7 +82,7 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 ARG PYTHON_VERSION=3.12.2
 # NOTE: We're placing pyenv and rbenv at /opt/ instead of $HOME/.pyenv, because the entire HOME directory is bind-mounted on CI, so it would be obscured by the mount
 ENV PYENV_ROOT=/opt/pyenv \
-    PATH=/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
+    PATH=/opt/pyenv/versions/${PYTHON_VERSION}/bin:/opt/pyenv/shims:/opt/pyenv/bin:${PATH} \
     Python_ROOT_DIR=/opt/pyenv/versions/${PYTHON_VERSION} \
     PYTHON_VERSION=${PYTHON_VERSION}
 
@@ -119,7 +119,7 @@ RUN cd /tmp && echo "Start by installing ${OPENSSL_VERSION}" \
     && make --quiet -j $(nproc) && make install --quiet
 
 ENV RBENV_ROOT=/opt/rbenv \
-    PATH=/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
+    PATH=/opt/rbenv/versions/${RUBY_VERSION}/bin:/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
 
 # Install ruby via rbenv
 # https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint
@@ -135,7 +135,10 @@ RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-d
     && rbenv global ${RUBY_VERSION} \
     && ruby --version \
     && ruby -e "require 'openssl'; puts OpenSSL::VERSION" \
-    && gem install bundler -v "${BUNDLER_VERSION}"
+    && gem install bundler -v "${BUNDLER_VERSION}" \
+    && echo "Shenanigans to fix the bundle tests" \
+    && mkdir -p /opt/rbenv/versions/3.2.2/lib/ruby/gems/3.2.0/gems/bundler-2.4.10/libexec \
+    && ln -sf ../exe/bundle /opt/rbenv/versions/3.2.2/lib/ruby/gems/3.2.0/gems/bundler-2.4.10/libexec/bundle
 
 # RUN cd /tmp \
 #     && echo "Fixing CA certificate issue" \
@@ -199,5 +202,9 @@ RUN if [ "${VARIANT}" = "focal" ] || [ "${VARIANT}" = "jammy" ]; then useradd -u
 COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
 COPY report_tool_infos.py /usr/local/bin/report_tool_infos
+
+# Make another copy at /opt/config
+COPY .inputrc .bashrc /opt/config/
+COPY git-prompt.sh /opt/config/
 
 CMD ["/bin/bash"]
