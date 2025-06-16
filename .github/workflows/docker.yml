@@ -145,6 +145,8 @@ jobs:
           other_name: ubuntu-22.04
         - VARIANT: noble
           other_name: ubuntu-24.04
+        - VARIANT: centos9
+          other_name: almalinux9
     steps:
 
     - name: Download digests
