@@ -137,7 +137,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        VARIANT: [focal, jammy, noble]
+        VARIANT: [focal, jammy, noble, centos9]
         include:
         - VARIANT: focal
           other_name: ubuntu-20.04
