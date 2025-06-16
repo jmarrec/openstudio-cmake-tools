@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [focal-amd64, focal-arm64, jammy-amd64, jammy-arm64, noble-amd64, noble-arm64]
+        name: [focal-amd64, focal-arm64, jammy-amd64, jammy-arm64, noble-amd64, noble-arm64, centos9-amd64]
         include:
         - name: focal-amd64
           arch: amd64
@@ -55,6 +55,10 @@ jobs:
           VARIANT: noble
           other_name: ubuntu-24.04
           # GCC_VER: "11"
+        - name: centos9-amd64
+          arch: amd64
+          VARIANT: centos9
+          other_name: almalinux9
 
     steps:
 
@@ -92,6 +96,7 @@ jobs:
       id: build
       with:
         context: .
+        file: ${{ contains(matrix.name, 'centos9') && 'Dockerfile_centos9' || 'Dockerfile' }}
         platforms: linux/${{ matrix.arch }}
         build-args: |
           VARIANT=${{ matrix.VARIANT }}

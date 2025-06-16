@@ -1,15 +1,5 @@
-# This is a image used to build openstudio for ubuntu platforms.
-# All of the developer tools are included and the only thing that needs to be done is cloning the repo
-# and running cmake setup.
+FROM almalinux:9
 
-# [Choice] focal (20.04), jammy (22.04), noble (24.04)
-ARG VARIANT="focal"
-FROM ubuntu:${VARIANT}
-
-# Restate the variant to use it later
-ARG VARIANT
-
-#RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1001 ubuntu
 USER root
 ENV HOME="/home/root"
 WORKDIR ${HOME}
@@ -17,32 +7,41 @@ WORKDIR ${HOME}
 ENV TZ=US
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update -qq --fix-missing && apt-get install -y --no-install-recommends --no-install-suggests \
-    curl vim lsb-release build-essential git libssl-dev libxt-dev \
-    libncurses5-dev libgl1-mesa-dev autoconf libexpat1-dev libpng-dev libfreetype6-dev \
-    libdbus-glib-1-dev libglib2.0-dev libfontconfig1-dev libxi-dev libxrender-dev \
-    libicu-dev chrpath bison libffi-dev libgdbm-dev libqdbm-dev \
-    libreadline-dev libyaml-dev libharfbuzz-dev libgmp-dev patchelf python3 python3-pip python3-dev \
-    lcov wget ninja-build gpg-agent software-properties-common ca-certificates pkgconf \
-    jq zip unzip p7zip-full p7zip-rar aria2 file openssh-client tree bash-completion ripgrep tmate \
+#RUN useradd -m oscentos
+#USER oscentos
+
+# Chained into a single run statement to mimize the number of image layers
+# The perl-Data-Dumper / perl-Thread-Queue are so you can build swig correctly, perl-IPC-Cmd perl-FindBin  perl-Pod-Html needed for openssl
+# epel-release allows me to find lsb_release
+# Lots of EPEL packages since the PowerTools/CRB repository for developers, such as glibc-static
+RUN dnf clean all && dnf -y update \
+ && dnf install -y epel-release dnf-plugins-core \
+ && dnf config-manager --set-enabled crb \
+ && dnf group install -y "Development Tools" \
+ && dnf install -y lsb_release glibc-static gcc-gfortran libgfortran-static libstdc++-static \
+    zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel tk-devel libffi-devel xz-devel openssl-devel \
+    autoconf gcc patch bzip2 openssl-devel libffi-devel readline zlib-devel gdbm ncurses-devel tar libyaml-devel \
+    perl-Data-Dumper perl-Thread-Queue perl-Digest-SHA1 perl-Digest-SHA perl-IPC-Cmd perl-FindBin perl-Pod-Html \
+    lcov aria2 wget ninja-build gnupg2 ca-certificates pkgconf \
+    jq p7zip p7zip-plugins tree bash-completion ripgrep tmate vim \
     groff less \
-    && ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then \
-        CLI_ZIP="awscli-exe-linux-x86_64.zip"; \
-    elif [ "$ARCH" = "aarch64" ]; then \
-        CLI_ZIP="awscli-exe-linux-aarch64.zip"; \
-    else \
-        echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi \
-    && cd /tmp \
-    && curl "https://awscli.amazonaws.com/${CLI_ZIP}" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install
+    libglvnd-devel mesa-libGL-devel.x86_64 mesa-libGLU-devel.x86_64 mesa-libGLw.x86_64 mesa-libGLw-devel.x86_64 libXi-devel.x86_64 freeglut-devel.x86_64 freeglut.x86_64                 libXrandr libXrandr-devel libXinerama-devel libXcursor-devel \
+ && ARCH=$(uname -m) && \
+ if [ "$ARCH" = "x86_64" ]; then \
+     CLI_ZIP="awscli-exe-linux-x86_64.zip"; \
+ elif [ "$ARCH" = "aarch64" ]; then \
+     CLI_ZIP="awscli-exe-linux-aarch64.zip"; \
+ else \
+     echo "Unsupported architecture: $ARCH" && exit 1; \
+ fi \
+ && cd /tmp \
+ && curl "https://awscli.amazonaws.com/${CLI_ZIP}" -o "awscliv2.zip" \
+ && unzip awscliv2.zip \
+ && ./aws/install
 
 # Set the locale
-RUN apt-get -y --no-install-recommends --no-install-suggests install locales \
-    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
-    && locale-gen
+RUN dnf install -y glibc-langpack-en \
+ && echo 'LANG=en_US.UTF-8' > /etc/locale.conf
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -51,32 +50,18 @@ ENV LANG=en_US.UTF-8 \
     CMAKE_EXPORT_COMPILE_COMMANDS=ON \
     NINJA_STATUS="[%p][%f/%t] "
 
-# Optionally: use a specific GCC version
-# This Dockerfile should support gcc-[7, 8, 9, 10, 11, 13], cf the ppa
-ARG GCC_VER
-# Add gcc-${GCC_VER}
-# RUN "echo GCC_VER=${GCC_VER}" >> /etc/environment
-RUN if [ -n "${GCC_VER}" ]; then \
-      add-apt-repository -y ppa:ubuntu-toolchain-r/test \
-      && apt-get update -qq && export DEBIAN_FRONTEND=noninteractive \
-      && apt-get install -y --no-install-recommends gcc-${GCC_VER} g++-${GCC_VER} gdb \
-      && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VER} 100 \
-                             --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VER} \
-                             --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_VER} \
-    ; fi
-
 # Setup the GitHub CLI
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt update && apt install gh -y
+RUN dnf install -y dnf-plugins-core \
+ && dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo \
+ && dnf install -y gh
 
- # Install cmake from PPA
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
-        | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null \
-    && apt-add-repository -y "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" \
-    && apt-get update -qq && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y --no-install-recommends cmake cmake-curses-gui
+ # Install cmake
+ARG CMAKE_VERSION=4.0.3
+RUN cd /tmp && curl -fsSL -o cmake.sh https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-$(uname -m).sh \
+ && chmod +x cmake.sh \
+ && mkdir -p /usr/local/cmake \
+ && ./cmake.sh --skip-license --prefix=/usr/local/cmake \
+ && ln -sf /usr/local/cmake/bin/cmake /usr/local/bin/cmake
 
 # Install python from pyenv
 ARG PYTHON_VERSION=3.12.2
@@ -86,11 +71,8 @@ ENV PYENV_ROOT=/opt/pyenv \
     Python_ROOT_DIR=/opt/pyenv/versions/${PYTHON_VERSION} \
     PYTHON_VERSION=${PYTHON_VERSION}
 
-# Install python from pyenv
-RUN apt-get install -y build-essential libssl-dev zlib1g-dev \
-        libbz2-dev libreadline-dev libsqlite3-dev curl \
-        libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
-    && curl https://pyenv.run | bash \
+# RUN dnf install -y zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel tk-devel libffi-devel xz-devel openssl-devel \
+RUN curl https://pyenv.run | bash \
     && PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install ${PYTHON_VERSION} \
     && pyenv global ${PYTHON_VERSION} \
     && pip install -q --upgrade --no-cache-dir pip setuptools
@@ -122,13 +104,11 @@ ENV RBENV_ROOT=/opt/rbenv \
     PATH=/opt/rbenv/versions/${RUBY_VERSION}/bin:/opt/rbenv/shims:/opt/rbenv/bin:${PATH}
 
 # Install ruby via rbenv
-# https://github.com/rbenv/ruby-build/wiki#ubuntudebianmint
-# focal is giving me trouble, tried PKG_CONFIG_PATH=/usr/local/ssl/lib64/pkgconfig, passing --with-openssl-dir
+# https://github.com/rbenv/ruby-build/wiki#rhelcentos
 # and even RUBY_BUILD_VENDOR_OPENSSL=1. I don't think we care about the openssl version used anymore (our conan ruby is used for building)
 # rbenv-installer does not allow specifying the PATH where it's going to be installed
-RUN apt-get install -y autoconf patch build-essential rustc libssl-dev libyaml-dev libreadline6-dev zlib1g-dev \
-        libgmp-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev uuid-dev \
-    && git clone https://github.com/rbenv/rbenv.git ${RBENV_ROOT} \
+# RUN dnf install -y autoconf gcc patch bzip2 openssl-devel libffi-devel readline zlib-devel gdbm ncurses-devel tar perl-FindBin libyaml-devel \
+RUN git clone https://github.com/rbenv/rbenv.git ${RBENV_ROOT} \
     && git clone https://github.com/rbenv/ruby-build.git $RBENV_ROOT/plugins/ruby-build \
     && rbenv init bash \
     && RUBY_CONFIGURE_OPTS="--disable-shared" rbenv install -v ${RUBY_VERSION} \
@@ -160,7 +140,6 @@ RUN cd /tmp && wget https://github.com/ccache/ccache/releases/download/v${CCACHE
 ARG DOXYGEN_VERSION_UNDERSCORED=1_10_0
 RUN if [ -n "${DOXYGEN_VERSION_UNDERSCORED}" ]; then \
       cd /tmp \
-      && apt-get -y --no-install-recommends --no-install-suggests install flex bison \
       && wget https://github.com/doxygen/doxygen/archive/refs/tags/Release_${DOXYGEN_VERSION_UNDERSCORED}.tar.gz \
       && tar xfz Release_${DOXYGEN_VERSION_UNDERSCORED}.tar.gz \
       && cd doxygen-Release_${DOXYGEN_VERSION_UNDERSCORED} \
@@ -184,20 +163,21 @@ RUN ARCH=$(uname -m) && \
     && QTIFW_URL="https://download.qt.io/official_releases/qt-installer-framework/${QTIFW_VERSION}/QtInstallerFramework-linux-${QTIFW_ARCH}-${QTIFW_VERSION}.run" \
     && curl -fsSL -o qtifw.run "${QTIFW_URL}" \
     && chmod +x qtifw.run \
-    && apt-get -y install libxkbcommon-x11-0 xorg-dev libgl1-mesa-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-render-util0-dev libxcb-xinerama0-dev libxcb-randr0-dev libxcb-shape0 libxcb-cursor0 libdbus-1-3 libwebp-dev \
+    && dnf install -y libxkbcommon-x11-devel xcb-util-cursor-devel xcb-util-wm-devel xcb-util-keysyms-devel \
+    && ln -sf /usr/lib64/libbz2.so /usr/lib64/libbz2.so.1.0 \
     && ./qtifw.run \
         --accept-licenses \
         --confirm-command \
         --default-answer --root ${QTIFW_INSTALL_DIR} install
 
-## Cleanup cached apt data we don't need anymore
-RUN apt-get -qq autoremove -y \
-    && apt-get -qq autoclean \
-    && rm -rf /var/lib/apt/lists/* \
+# Clean up cached dnf data we don't need anymore
+RUN dnf -y autoremove \
+    && dnf clean all \
+    && rm -rf /var/cache/dnf \
     && rm -rf /tmp/*
 
-# create default user ubuntu (added by default already starting at noble), Jenkins uses it
-RUN if [ "${VARIANT}" = "focal" ] || [ "${VARIANT}" = "jammy" ]; then useradd -u 1000 ubuntu; fi
+# create default user
+RUN useradd -u 1000 oscentos
 
 COPY .inputrc .bashrc ${HOME}
 COPY git-prompt.sh ${HOME}/.config/git/
