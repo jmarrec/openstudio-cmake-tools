@@ -18,7 +18,8 @@ RUN dnf clean all && dnf -y update \
  && dnf install -y epel-release dnf-plugins-core \
  && dnf config-manager --set-enabled crb \
  && dnf group install -y "Development Tools" \
- && dnf install -y lsb_release glibc-static gcc-gfortran libgfortran-static libstdc++-static \
+ && dnf install -y gcc-toolset-14-gcc gcc-toolset-14-gcc-c++ gcc-toolset-14-gcc-gfortran gcc-toolset-14-libstdc++-devel \
+ && dnf install -y lsb_release glibc-static libgfortran-static libstdc++-static \
     zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel tk-devel libffi-devel xz-devel openssl-devel \
     autoconf gcc patch bzip2 openssl-devel libffi-devel readline zlib-devel gdbm ncurses-devel tar libyaml-devel \
     perl-Data-Dumper perl-Thread-Queue perl-Digest-SHA1 perl-Digest-SHA perl-IPC-Cmd perl-FindBin perl-Pod-Html \
@@ -49,6 +50,15 @@ ENV LANG=en_US.UTF-8 \
     GTEST_COLOR=1 \
     CMAKE_EXPORT_COMPILE_COMMANDS=ON \
     NINJA_STATUS="[%p][%f/%t] "
+
+# Make gcc-toolset-14 (GCC 14, has full C++20 <format> support) the default compiler system-wide,
+# instead of the base AlmaLinux9 gcc 11.5.0 which lacks it. This is equivalent to `scl enable gcc-toolset-14 bash`
+# but persists across all subsequent RUN layers (scl enable only affects the single subshell it wraps).
+ENV PATH=/opt/rh/gcc-toolset-14/root/usr/bin:${PATH} \
+    LD_LIBRARY_PATH=/opt/rh/gcc-toolset-14/root/usr/lib64:/opt/rh/gcc-toolset-14/root/usr/lib:${LD_LIBRARY_PATH} \
+    PKG_CONFIG_PATH=/opt/rh/gcc-toolset-14/root/usr/lib64/pkgconfig:${PKG_CONFIG_PATH} \
+    CC=/opt/rh/gcc-toolset-14/root/usr/bin/gcc \
+    CXX=/opt/rh/gcc-toolset-14/root/usr/bin/g++
 
 # Setup the GitHub CLI
 RUN dnf install -y dnf-plugins-core \
